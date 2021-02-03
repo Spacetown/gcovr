@@ -16,26 +16,13 @@
 #
 # ****************************************************************************
 
-import sys
 
-from ..utils import get_global_stats
+class Base:
+    def options(self):
+        raise NotImplementedError("Iterator options not implemented")
 
+    def check_options(self, options, logger):
+        pass
 
-def print_summary(covdata):
-    '''Print a small report to the standard output.
-    Output the percentage, covered and total lines and branches.
-    '''
-
-    (lines_total, lines_covered, percent,
-     branches_total, branches_covered,
-     percent_branches) = get_global_stats(covdata)
-
-    lines_out = "lines: %0.1f%% (%s out of %s)\n" % (
-        percent, lines_covered, lines_total
-    )
-    branches_out = "branches: %0.1f%% (%s out of %s)\n" % (
-        percent_branches, branches_covered, branches_total
-    )
-
-    sys.stdout.write(lines_out)
-    sys.stdout.write(branches_out)
+    def read(self, covdata, options, logger):
+        raise NotImplementedError("Function read not implemented")
