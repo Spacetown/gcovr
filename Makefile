@@ -11,6 +11,8 @@ set_sensible_default = $(if $(filter undefined default,$(origin $(1))),$(2),$(va
 
 PYTHON := $(call set_sensible_default,PYTHON,python3)
 
+override AVAILABLE_CC := gcc-5 gcc-6 gcc-8
+
 # Setting CXX and GCOV depending on CC. Only CC has to be set to a specific version.
 # If using GitHub actions on Windows, gcc-8 is set but gcc is used, so we override it.
 CC := $(call set_sensible_default,CC,gcc-5)
@@ -18,6 +20,19 @@ export CC := $(CC)
 CXX := $(call set_sensible_default,CXX,$(subst gcc,g++,$(CC)))
 export CXX := $(CXX)
 GCOV := $(call set_sensible_default,GCOV,$(subst gcc,gcov,$(CC)))
+
+# Get the version of GCC. This is because of #325 (Windows with CC=gcc)
+ifeq ($(subst gcc-,,$(CC)),$(CC))
+override CC_VERSION := $(shell $(CC) --version | grep -E '^gcc.*\s\(.+\)\s.+$$")
+override CC_VERSION := $(word $(words $(CC_VERSION)),$(CC_VERSION))
+override CC_VERSION := gcc-$(word 1,$(subst ., ,$(CC_VERSION)))
+else
+override CC_VERSION := $(CC)
+endif
+ifeq ($(filter $(CC_VERSION),$(AVAILABLE_CC)),)
+$(error Unsupported version of GCC used. CC points to $(CC_VERSION) but must point to one of: $(AVAILABLE_CC))
+endif
+export CC_VERSION := $(CC_VERSION)
 
 USERID  := $(shell id -u $(USER))
 QA_CONTAINER ?= gcovr-qa-$(CC)-uid_$(USERID)
@@ -54,19 +69,8 @@ setup-dev:
 	$(PYTHON) -m pip install -r requirements.txt -r doc/requirements.txt
 	$(PYTHON) -m pip install -e .
 	$(PYTHON) --version
-ifeq ($(subst true,True,$(CI)),True)
-ifeq ($(shell which $(CC) 2>/dev/null),)
-	cd $(dir $(shell which gcc 2>/dev/null)) && cp -f gcc.exe $(CC).exe
-endif
 	$(CC) --version
-ifeq ($(shell which $(CXX) 2>/dev/null),)
-	cd $(dir $(shell which g++ 2>/dev/null)) && cp -f g++.exe $(CXX).exe
-endif
 	$(CXX) --version
-ifeq ($(shell which $(GCOV) 2>/dev/null),)
-	cd $(dir $(shell which gcov 2>/dev/null)) && cp -f gcov.exe $(GCOV).exe
-endif
-endif
 	$(GCOV) --version
 
 qa: lint black test doc
