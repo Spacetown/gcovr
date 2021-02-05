@@ -23,7 +23,7 @@ GCOV := $(call set_sensible_default,GCOV,$(subst gcc,gcov,$(CC)))
 
 # Get the version of GCC. This is because of #325 (Windows with CC=gcc)
 ifeq ($(subst gcc-,,$(CC)),$(CC))
-override CC_VERSION := $(shell $(CC) --version | grep -E '^gcc.*\s\(.+\)\s.+$$")
+override CC_VERSION := $(shell $(CC) --version | grep -E '^gcc.*\s\(.+\)\s.+$$')
 override CC_VERSION := $(word $(words $(CC_VERSION)),$(CC_VERSION))
 override CC_VERSION := gcc-$(word 1,$(subst ., ,$(CC_VERSION)))
 else
