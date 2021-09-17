@@ -1,8 +1,7 @@
-black; implementation_name == "cpython"
+nox
 cmake
 codecov
 coverage
-flake8
 jinja2
 lxml
 pygments == 2.7.4
