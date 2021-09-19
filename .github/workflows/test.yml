@@ -107,6 +107,7 @@ jobs:
         echo "USE_COVERAGE=${{ ( ( matrix.os == 'windows-2019' ) && ( matrix.python-version == '3.7' ) ) || ( ( matrix.os == 'ubuntu-18.04' ) && ( matrix.gcc == 'gcc-6' ) && ( matrix.python-version == '3.8' ) ) }}" >> $GITHUB_ENV
         echo "CC=${{ matrix.gcc }}" >> $GITHUB_ENV
         echo "PYTHON=python" >> $GITHUB_ENV
+        echo "TEST_OPTS=--archive_differences" >> $GITHUB_ENV
       shell: bash
     - name: Install msys with GCC (Windows)
       if: ${{ startsWith(matrix.os,'windows-') }}
@@ -130,31 +131,22 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Cache pip
-      uses: actions/cache@v2
-      with:
-        # This path is specific to Ubuntu
-        path: ~/.cache/pip
-        # Look to see if there is a cache hit for the corresponding requirements file
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'doc/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          ${{ runner.os }}-
-    - name: Install dependencies
+    - name: Install nox
       run: |
-        make setup-dev
+        python -m pip install --upgrade pip
+        python -m pip install nox
     - name: Lint files
       run: |
-        make lint
+        python -m nox --session lint
     - name: Check format of files
       if: ${{ ( matrix.python-version != 'pypy3' ) }}
       # Currently fail of this job is OK.
       continue-on-error: true
       run: |
-        make check-format
+        python -m nox --session black
     - name: Test with pytest
       run: |
-        make test TEST_OPTS="--archive_differences"
+        python -m nox --session lint
     - name: Upload pytest test results
       if: ${{ failure() }}
       uses: actions/upload-artifact@v2

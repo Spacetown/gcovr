@@ -42,18 +42,19 @@ jobs:
         sudo apt-get clean
     - name: Install ninja
       uses: seanmiddleditch/gha-setup-ninja@master
-    - name: Install dependencies
+    - name: Install nox
       run: |
-        make setup-dev PYTHON=python
+        python -m pip install --upgrade pip
+        python -m pip install nox
     - name: Lint with flake8
       run: |
-        make lint PYTHON=python
+        python -m nox --session lint
     - name: Test with pytest
       run: |
-        make test CC=$CC PYTHON=python
+        python -m nox --session "tests(version='$CC')"
     - name: Generate documentation
       run: |
-        make doc PYTHON=python
+        python -m nox --session doc
     - name: Build
       run: |
         python setup.py sdist bdist_wheel
