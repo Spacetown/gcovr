@@ -1,0 +1,21 @@
+name: Set up Ubuntu runner
+# Schema: https://json.schemastore.org/github-action.json
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up environment
+      uses: "./.github/actions/generic/environment"
+    - name: Install build commands, GCC and libxml2 (Linux)
+      run: |
+        sudo apt update
+        sudo apt-get install -y \
+          make \
+          ninja-build \
+          ${{ matrix.gcc }} \
+          $(echo ${{ matrix.gcc }} | sed -e 's/gcc/g\+\+/') \
+          libxml2-utils
+      shell: bash
+    - name: Set up python
+      uses: "./.github/actions/generic/python"
+

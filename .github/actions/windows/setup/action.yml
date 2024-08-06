@@ -1,0 +1,19 @@
+name: Set up Windows runner
+# Schema: https://json.schemastore.org/github-action.json
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up environment
+      uses: "./.github/actions/generic/environment"
+    - name: Install msys with GCC (Windows)
+      uses: msys2/setup-msys2@v2
+      with:
+        install: gcc make
+        cache: true
+    - name: Install ninja (Windows)
+      run: |
+        choco install ninja
+      shell: bash
+    - name: Set up python
+      uses: "./.github/actions/generic/python"
