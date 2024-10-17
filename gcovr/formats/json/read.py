@@ -111,7 +111,9 @@ def read_report(options: Options) -> CovData:
                 LOGGER.debug(f"  Excluding coverage data for file {file_path}")
                 continue
 
-            file_coverage = FileCoverage(file_path)
+            file_coverage = FileCoverage(
+                file_path, gcovr_file.get("gcovr/data_sources", filename)
+            )
             merge_options = get_merge_mode_from_options(options)
             for json_function in gcovr_file["functions"]:
                 insert_function_coverage(
