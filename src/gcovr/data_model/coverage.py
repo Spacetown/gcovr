@@ -502,7 +502,7 @@ class ConditionCoverage(CoverageBase):
     @property
     def key(self) -> ConditionsKeyType:
         """Get the key used for the dictionary to unique identify the coverage object."""
-        return (self.conditionno, self.count)
+        return self.conditionno
 
     @property
     def is_excluded(self) -> bool:
