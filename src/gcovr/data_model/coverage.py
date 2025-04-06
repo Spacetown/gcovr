@@ -1172,6 +1172,7 @@ class LineCoverage(CoverageBase):
         "lineno",
         "count",
         "function_name",
+        "demangled_function_name",
         "block_ids",
         "excluded",
         "md5",
@@ -1201,6 +1202,7 @@ class LineCoverage(CoverageBase):
         self.lineno = lineno
         self.count = count
         self.function_name = function_name
+        self.demangled_function_name = None
         self.block_ids = block_ids
         self.md5 = md5
         self.excluded = excluded
@@ -1589,14 +1591,14 @@ class FileCoverage(CoverageBase):
             data_dict.get(GCOVR_DATA_SOURCES, data_source),
             filename=filename,
         )
-        for data_dict_function in data_dict["functions"]:
-            filecov.insert_function_coverage(
-                FunctionCoverage.deserialize(data_source, data_dict_function),
-                merge_options,
-            )
         for data_dict_line in data_dict["lines"]:
             filecov.insert_line_coverage(
                 LineCoverage.deserialize(data_source, data_dict_line),
+                merge_options,
+            )
+        for data_dict_function in data_dict["functions"]:
+            filecov.insert_function_coverage(
+                FunctionCoverage.deserialize(data_source, data_dict_function),
                 merge_options,
             )
 
@@ -1649,6 +1651,11 @@ class FileCoverage(CoverageBase):
             self.functions[key].merge(functioncov, options)
         else:
             self.functions[key] = functioncov
+        for linecov in self.lines.values():
+            if functioncov.mangled_name is not None and (
+                functioncov.mangled_name == linecov.function_name
+            ):
+                linecov.demangled_function_name = functioncov.demangled_name
 
     def filter_for_function(self, functioncov: FunctionCoverage) -> FileCoverage:
         """Get a file coverage object reduced to a single function"""
