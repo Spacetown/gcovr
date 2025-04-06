@@ -1,0 +1,390 @@
+{
+    "gcovr/format_version": "0.14",
+    "files": [
+        {
+            "file": "main.cpp",
+            "lines": [
+                {
+                    "line_number": 5,
+                    "function_name": "void f<int>(int)",
+                    "count": 10,
+                    "branches": [],
+                    "gcovr/md5": "ec239b8f489c5e9de33c34da430cf108"
+                },
+                {
+                    "line_number": 9,
+                    "function_name": "void f<int>(int)",
+                    "count": 10,
+                    "branches": [
+                        {
+                            "count": 3,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 0
+                        },
+                        {
+                            "count": 1,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 0
+                        },
+                        {
+                            "count": 5,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 1
+                        },
+                        {
+                            "count": 1,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 1
+                        }
+                    ],
+                    "gcovr/md5": "ae266ede7a2c875ef4e08056670551a8"
+                },
+                {
+                    "line_number": 10,
+                    "function_name": "void f<int>(int)",
+                    "count": 8,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 3
+                        },
+                        {
+                            "source_block_id": 0,
+                            "returned": 3
+                        },
+                        {
+                            "source_block_id": 0,
+                            "returned": 3
+                        },
+                        {
+                            "source_block_id": 0,
+                            "returned": 3
+                        },
+                        {
+                            "source_block_id": 1,
+                            "returned": 5
+                        },
+                        {
+                            "source_block_id": 1,
+                            "returned": 5
+                        },
+                        {
+                            "source_block_id": 1,
+                            "returned": 5
+                        },
+                        {
+                            "source_block_id": 1,
+                            "returned": 5
+                        }
+                    ],
+                    "gcovr/md5": "19a66e7beb790fb8892d8ee6fbe0f289"
+                },
+                {
+                    "line_number": 12,
+                    "function_name": "void f<int>(int)",
+                    "count": 10,
+                    "branches": [
+                        {
+                            "count": 3,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 0
+                        },
+                        {
+                            "count": 1,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 0
+                        },
+                        {
+                            "count": 2,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 1
+                        },
+                        {
+                            "count": 1,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 1
+                        },
+                        {
+                            "count": 0,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 2
+                        },
+                        {
+                            "count": 2,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 2
+                        },
+                        {
+                            "count": 5,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 5
+                        },
+                        {
+                            "count": 1,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 5
+                        },
+                        {
+                            "count": 4,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 6
+                        },
+                        {
+                            "count": 1,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 6
+                        },
+                        {
+                            "count": 1,
+                            "fallthrough": true,
+                            "throw": false,
+                            "source_block_id": 7
+                        },
+                        {
+                            "count": 3,
+                            "fallthrough": false,
+                            "throw": false,
+                            "source_block_id": 7
+                        }
+                    ],
+                    "calls": [
+                        {
+                            "source_block_id": 3,
+                            "returned": 1
+                        },
+                        {
+                            "source_block_id": 3,
+                            "returned": 1
+                        },
+                        {
+                            "source_block_id": 3,
+                            "returned": 1
+                        },
+                        {
+                            "source_block_id": 3,
+                            "returned": 1
+                        },
+                        {
+                            "source_block_id": 8,
+                            "returned": 2
+                        },
+                        {
+                            "source_block_id": 8,
+                            "returned": 2
+                        },
+                        {
+                            "source_block_id": 8,
+                            "returned": 2
+                        },
+                        {
+                            "source_block_id": 8,
+                            "returned": 2
+                        }
+                    ],
+                    "gcovr/md5": "a177367d02d536dc6534ded90eceddb1"
+                },
+                {
+                    "line_number": 14,
+                    "function_name": "void f<int>(int)",
+                    "count": 10,
+                    "branches": [],
+                    "gcovr/md5": "dd73f8311b6b70ff0270945514d01946"
+                },
+                {
+                    "line_number": 15,
+                    "function_name": "void f<int>(int)",
+                    "count": 10,
+                    "branches": [],
+                    "gcovr/md5": "cbb184dd8e05c9709e5dcaedaa0495cf"
+                },
+                {
+                    "line_number": 17,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "gcovr/md5": "d9d7d650613a8ac26f6dfe250d77e8ea"
+                },
+                {
+                    "line_number": 18,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "733d21fe5e6dfb41c1667bc29512bd23"
+                },
+                {
+                    "line_number": 19,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "733d21fe5e6dfb41c1667bc29512bd23"
+                },
+                {
+                    "line_number": 20,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "733d21fe5e6dfb41c1667bc29512bd23"
+                },
+                {
+                    "line_number": 21,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "733d21fe5e6dfb41c1667bc29512bd23"
+                },
+                {
+                    "line_number": 22,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "733d21fe5e6dfb41c1667bc29512bd23"
+                },
+                {
+                    "line_number": 23,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "733d21fe5e6dfb41c1667bc29512bd23"
+                },
+                {
+                    "line_number": 25,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "d8e4c2f52387266bddafbfe950eb5a95"
+                },
+                {
+                    "line_number": 26,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "d8e4c2f52387266bddafbfe950eb5a95"
+                },
+                {
+                    "line_number": 27,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "d8e4c2f52387266bddafbfe950eb5a95"
+                },
+                {
+                    "line_number": 28,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "calls": [
+                        {
+                            "source_block_id": 0,
+                            "returned": 1
+                        }
+                    ],
+                    "gcovr/md5": "d8e4c2f52387266bddafbfe950eb5a95"
+                },
+                {
+                    "line_number": 30,
+                    "function_name": "main",
+                    "count": 1,
+                    "branches": [],
+                    "gcovr/md5": "c26ba559a5f34d46a49fafed87946fb7"
+                },
+                {
+                    "line_number": 31,
+                    "function_name": "__static_initialization_and_destruction_0(int, int)",
+                    "count": 0,
+                    "branches": [],
+                    "gcovr/md5": "cbb184dd8e05c9709e5dcaedaa0495cf",
+                    "gcovr/excluded": true
+                }
+            ],
+            "functions": [
+                {
+                    "name": "main",
+                    "lineno": 17,
+                    "execution_count": 1,
+                    "blocks_percent": 100.0
+                },
+                {
+                    "demangled_name": "void f<double>(double)",
+                    "lineno": 5,
+                    "execution_count": 4,
+                    "blocks_percent": 100.0
+                },
+                {
+                    "demangled_name": "void f<int>(int)",
+                    "lineno": 5,
+                    "execution_count": 6,
+                    "blocks_percent": 100.0
+                }
+            ]
+        }
+    ]
+}
