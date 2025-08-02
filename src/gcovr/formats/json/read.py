@@ -21,6 +21,9 @@ import json
 import logging
 import os
 from glob import glob
+from typing import Any
+
+from ...data_model.coverage import GCOVR_DATA_SOURCES
 
 from ...data_model import version
 from ...data_model.container import CoverageContainer
@@ -51,6 +54,21 @@ def read_report(options: Options) -> CoverageContainer:
             for trace_file in trace_files:
                 datafiles.add(os.path.normpath(trace_file))
 
+        def deep_add_data_source(item: Any, data_source: str) -> None:
+            """Extend the set of tuples with the current source file."""
+            if isinstance(item, dict):
+                if GCOVR_DATA_SOURCES in item:
+                    item[GCOVR_DATA_SOURCES] = set(
+                        (data_source, *e) for e in item[GCOVR_DATA_SOURCES]
+                    )
+                else:
+                    item[GCOVR_DATA_SOURCES] = set((data_source,))
+                for value in item.values():
+                    deep_add_data_source(value, data_source)
+            elif isinstance(item, list):
+                for entry in item:
+                    deep_add_data_source(entry, data_source)
+
         merge_options = get_merge_mode_from_options(options)
         for data_source in datafiles:
             LOGGER.debug(f"Processing JSON file: {data_source}")
@@ -64,9 +82,12 @@ def read_report(options: Options) -> CoverageContainer:
                     f"Wrong format version, got {format_version} expected {version.FORMAT_VERSION}."
                 )
 
+            deep_add_data_source(gcovr_json_data["files"], data_source)
+
             covdata.merge(
                 CoverageContainer.deserialize(
-                    data_source, gcovr_json_data["files"], options, merge_options
+                    gcovr_json_data["files"],
+                    options,
                 ),
                 merge_options,
             )

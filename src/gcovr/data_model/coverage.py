@@ -83,7 +83,7 @@ from .coverage_dict import (
     CoverageDict,
     LinesKeyType,
 )
-from .merging import DEFAULT_MERGE_OPTIONS, MergeOptions
+from .merging import DEFAULT_MERGE_OPTIONS, MergeOptions, get_merge_mode_from_options
 from .stats import CoverageStat, DecisionCoverageStat, SummarizedStats
 
 LOGGER = logging.getLogger("gcovr")
@@ -308,12 +308,11 @@ class BranchCoverage(CoverageBase):
     def deserialize(
         cls,
         linecov: LineCoverage,
-        data_source: str,
         data_dict: dict[str, Any],
     ) -> BranchCoverage:
         """Deserialize the object."""
         return linecov.insert_branch_coverage(
-            data_dict.get(GCOVR_DATA_SOURCES, data_source),
+            data_dict.get(GCOVR_DATA_SOURCES, []),
             branchno=data_dict.get("branchno"),
             count=data_dict["count"],
             source_block_id=data_dict.get("source_block_id"),
@@ -532,12 +531,11 @@ class ConditionCoverage(CoverageBase):
     def deserialize(
         cls,
         linecov: LineCoverage,
-        data_source: str,
         data_dict: dict[str, Any],
     ) -> ConditionCoverage:
         """Deserialize the object."""
         return linecov.insert_condition_coverage(
-            data_dict.get(GCOVR_DATA_SOURCES, data_source),
+            data_dict.get(GCOVR_DATA_SOURCES, []),
             conditionno=data_dict["conditionno"],
             count=data_dict["count"],
             covered=data_dict["covered"],
@@ -661,14 +659,10 @@ class DecisionCoverageUncheckable(CoverageBase):
         return data_dict
 
     @classmethod
-    def deserialize(
-        cls, linecov: LineCoverage, data_source: str, data_dict: dict[str, Any]
-    ) -> None:
+    def deserialize(cls, linecov: LineCoverage, data_dict: dict[str, Any]) -> None:
         """Deserialize the object."""
         linecov.insert_decision_coverage(
-            DecisionCoverageUncheckable(
-                linecov, data_dict.get(GCOVR_DATA_SOURCES, data_source)
-            )
+            DecisionCoverageUncheckable(linecov, data_dict.get(GCOVR_DATA_SOURCES, []))
         )
 
     def merge(self, other: DecisionCoverageUncheckable) -> None:
@@ -744,13 +738,15 @@ class DecisionCoverageConditional(CoverageBase):
 
     @classmethod
     def deserialize(
-        cls, linecov: LineCoverage, data_source: str, data_dict: dict[str, Any]
+        cls,
+        linecov: LineCoverage,
+        data_dict: dict[str, Any],
     ) -> None:
         """Deserialize the object."""
         linecov.insert_decision_coverage(
             DecisionCoverageConditional(
                 linecov,
-                data_dict.get(GCOVR_DATA_SOURCES, data_source),
+                data_dict.get(GCOVR_DATA_SOURCES, []),
                 count_true=data_dict["count_true"],
                 count_false=data_dict["count_false"],
             )
@@ -827,13 +823,15 @@ class DecisionCoverageSwitch(CoverageBase):
 
     @classmethod
     def deserialize(
-        cls, linecov: LineCoverage, data_source: str, data_dict: dict[str, Any]
+        cls,
+        linecov: LineCoverage,
+        data_dict: dict[str, Any],
     ) -> None:
         """Deserialize the object."""
         linecov.insert_decision_coverage(
             DecisionCoverageSwitch(
                 linecov,
-                data_dict.get(GCOVR_DATA_SOURCES, data_source),
+                data_dict.get(GCOVR_DATA_SOURCES, []),
                 count=data_dict["count"],
             )
         )
@@ -960,12 +958,11 @@ class CallCoverage(CoverageBase):
     def deserialize(
         cls,
         linecov: LineCoverage,
-        data_source: str,
         data_dict: dict[str, Any],
     ) -> CallCoverage:
         """Deserialize the object."""
         return linecov.insert_call_coverage(
-            data_dict.get(GCOVR_DATA_SOURCES, data_source),
+            data_dict.get(GCOVR_DATA_SOURCES, []),
             callno=data_dict.get("callno"),
             returned=data_dict["returned"],
             source_block_id=data_dict["source_block_id"],
@@ -1206,12 +1203,11 @@ class LineCoverage(CoverageBase):
     def deserialize(
         cls,
         filecov: FileCoverage,
-        data_source: str,
         data_dict: dict[str, Any],
     ) -> LineCoverage:
         """Deserialize the object."""
         linecov = filecov.insert_line_coverage(
-            data_dict.get(GCOVR_DATA_SOURCES, data_source),
+            data_dict.get(GCOVR_DATA_SOURCES, []),
             lineno=data_dict["line_number"],
             count=data_dict["count"],
             function_name=data_dict.get("function_name"),
@@ -1221,32 +1217,26 @@ class LineCoverage(CoverageBase):
         )
 
         for data_dict_branch in data_dict["branches"]:
-            BranchCoverage.deserialize(linecov, data_source, data_dict_branch)
+            BranchCoverage.deserialize(linecov, data_dict_branch)
 
         if (conditions := data_dict.get("conditions")) is not None:
             for data_dict_condition in conditions:
-                ConditionCoverage.deserialize(linecov, data_source, data_dict_condition)
+                ConditionCoverage.deserialize(linecov, data_dict_condition)
 
         if (data_dict_decision := data_dict.get("gcovr/decision")) is not None:
             decision_type = data_dict_decision["type"]
             if decision_type == "uncheckable":
-                DecisionCoverageUncheckable.deserialize(
-                    linecov, data_source, data_dict_decision
-                )
+                DecisionCoverageUncheckable.deserialize(linecov, data_dict_decision)
             elif decision_type == "conditional":
-                DecisionCoverageConditional.deserialize(
-                    linecov, data_source, data_dict_decision
-                )
+                DecisionCoverageConditional.deserialize(linecov, data_dict_decision)
             elif decision_type == "switch":
-                DecisionCoverageSwitch.deserialize(
-                    linecov, data_source, data_dict_decision
-                )
+                DecisionCoverageSwitch.deserialize(linecov, data_dict_decision)
             else:  # pragma: no cover
                 raise AssertionError(f"Unknown decision type: {decision_type!r}")
 
         if (calls := data_dict.get("calls")) is not None:
             for data_dict_call in calls:
-                CallCoverage.deserialize(linecov, data_source, data_dict_call)
+                CallCoverage.deserialize(linecov, data_dict_call)
 
         return linecov
 
@@ -1640,9 +1630,8 @@ class FunctionCoverage(CoverageBase):
     def deserialize(
         cls,
         filecov: FileCoverage,
-        merge_options: MergeOptions,
-        data_source: str,
         data_dict: dict[str, Any],
+        merge_options: MergeOptions,
     ) -> FunctionCoverage:
         """Deserialize the object."""
         start: Optional[tuple[int, int]] = None
@@ -1654,7 +1643,7 @@ class FunctionCoverage(CoverageBase):
             end = (int(end_l_c[0]), int(end_l_c[1]))
 
         return filecov.insert_function_coverage(
-            data_dict.get(GCOVR_DATA_SOURCES, data_source),
+            data_dict.get(GCOVR_DATA_SOURCES, []),
             merge_options,
             mangled_name=data_dict.get("name"),
             demangled_name=data_dict.get("demangled_name"),
@@ -1880,10 +1869,16 @@ class FileCoverage(CoverageBase):
         if other.data_sources:
             self.data_sources.update(other.data_sources)
 
-    def serialize(self, options: Options) -> dict[str, Any]:
+    def serialize(self, options: Optional[Options] = None) -> dict[str, Any]:
         """Serialize the object."""
         # Only write data in verbose mode
-        if options.verbose:
+        if options is None:
+
+            def get_data_source(cov: CoverageBase) -> dict[str, Any]:  # pylint: disable=unused-argument
+                """Stub if not running in verbose mode."""
+                return {GCOVR_DATA_SOURCES: list(sorted(cov.data_sources))}
+
+        elif options.verbose:
 
             def get_data_source(cov: CoverageBase) -> dict[str, Any]:
                 """Return the printable data sources."""
@@ -1902,9 +1897,12 @@ class FileCoverage(CoverageBase):
                 """Stub if not running in verbose mode."""
                 return {}
 
-        filename = self.presentable_filename(options.root_filter)
-        if options.json_base:
-            filename = "/".join([options.json_base, filename])
+        if options is None:
+            filename = self.filename
+        else:
+            filename = self.presentable_filename(options.root_filter)
+            if options.json_base:
+                filename = "/".join([options.json_base, filename])
         data_dict = {
             "file": filename,
             "lines": [
@@ -1924,28 +1922,34 @@ class FileCoverage(CoverageBase):
     @classmethod
     def deserialize(
         cls,
-        data_source: str,
         data_dict: dict[str, Any],
-        merge_options: MergeOptions,
-        options: Options,
+        options: Optional[Options],
     ) -> Optional[FileCoverage]:
         """Deserialize the object."""
-        filename = os.path.join(
-            os.path.abspath(options.root), os.path.normpath(data_dict["file"])
-        )
-
-        if is_file_excluded(filename, options.filter, options.exclude):
-            return None
+        filename = data_dict["file"]
+        if options is not None:
+            filename = os.path.join(
+                os.path.abspath(options.root), os.path.normpath(filename)
+            )
+            if is_file_excluded(filename, options.filter, options.exclude):
+                return None
 
         filecov = FileCoverage(
-            data_dict.get(GCOVR_DATA_SOURCES, data_source),
+            data_dict.get(GCOVR_DATA_SOURCES, []),
             filename=filename,
         )
         for data_dict_line in data_dict["lines"]:
-            LineCoverage.deserialize(filecov, data_source, data_dict_line)
+            LineCoverage.deserialize(filecov, data_dict_line)
+        merge_options = (
+            DEFAULT_MERGE_OPTIONS
+            if options is None
+            else get_merge_mode_from_options(options)
+        )
         for data_dict_function in data_dict["functions"]:
             FunctionCoverage.deserialize(
-                filecov, merge_options, data_source, data_dict_function
+                filecov,
+                data_dict_function,
+                merge_options,
             )
 
         return filecov

@@ -37,7 +37,7 @@ from ..utils import commonpath, force_unix_separator
 
 from .coverage import FileCoverage
 from .coverage_dict import CoverageDict
-from .merging import MergeOptions
+from .merging import DEFAULT_MERGE_OPTIONS, MergeOptions, get_merge_mode_from_options
 from .stats import CoverageStat, DecisionCoverageStat, SummarizedStats
 
 LOGGER = logging.getLogger("gcovr")
@@ -151,26 +151,25 @@ class CoverageContainer(ContainerBase):
         """Get the file coverage data items."""
         return self.data.items()
 
-    def serialize(self, options: Options) -> list[dict[str, Any]]:
+    def serialize(self, options: Optional[Options] = None) -> list[dict[str, Any]]:
         """Serialize the object."""
         return [value.serialize(options) for _, value in sorted(self.items())]
 
     @classmethod
     def deserialize(
         cls,
-        data_source: str,
         data_dicts_files: list[dict[str, Any]],
-        options: Options,
-        merge_options: MergeOptions,
+        options: Optional[Options] = None,
     ) -> CoverageContainer:
         """Serialize the object."""
         covdata = CoverageContainer()
+        merge_options = (
+            DEFAULT_MERGE_OPTIONS
+            if options is None
+            else get_merge_mode_from_options(options)
+        )
         for gcovr_file in data_dicts_files:
-            if (
-                filecov := FileCoverage.deserialize(
-                    data_source, gcovr_file, merge_options, options
-                )
-            ) is not None:
+            if (filecov := FileCoverage.deserialize(gcovr_file, options)) is not None:
                 covdata.insert_file_coverage(
                     filecov,
                     merge_options,
@@ -178,9 +177,15 @@ class CoverageContainer(ContainerBase):
 
         return covdata
 
-    def merge(self, other: CoverageContainer, options: MergeOptions) -> None:
+    def deep_copy(self) -> CoverageContainer:
+        """Return a deep copy of the data structure.
+
+        The copy is created by serializing and deserializing the data model.
         """
-        Merge CoverageContainer information and clear directory statistics.
+        return self.deserialize(self.serialize())
+
+    def merge(self, other: CoverageContainer, options: MergeOptions) -> None:
+        """Merge CoverageContainer information and clear directory statistics.
 
         Do not use 'other' objects afterwards!
         """
@@ -226,7 +231,9 @@ class CoverageContainer(ContainerBase):
         return str(os.path.dirname(filename.rstrip(os.sep))) + os.sep
 
     def populate_directories(
-        self, sorted_keys: Iterable[str], root_filter: re.Pattern[str]
+        self,
+        sorted_keys: Iterable[str],
+        options: Options,
     ) -> None:
         r"""Populate the list of directories and add accumulated stats.
 
@@ -250,7 +257,7 @@ class CoverageContainer(ContainerBase):
                 .replace("/", os.sep)
                 .rstrip(os.sep)
             ) + os.sep
-            while dirname is not None and root_filter.search(dirname + os.sep):
+            while dirname is not None and options.root_filter.search(dirname + os.sep):
                 if dirname not in subdirs:
                     subdirs[dirname] = CoverageContainerDirectory(dirname)
                 if dircov is None:
