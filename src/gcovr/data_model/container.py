@@ -309,6 +309,11 @@ class CoverageContainer(ContainerBase):
 
         self.directories = list(subdirs.values())
 
+    def merge_lines(self, options: MergeOptions) -> None:
+        """Get a copy of the file coverage object with all mergeable data merged."""
+        for filecov in self.values():
+            filecov.merge_lines(options)
+
 
 class CoverageContainerDirectory(ContainerBase):
     """Represent coverage information about a directory."""

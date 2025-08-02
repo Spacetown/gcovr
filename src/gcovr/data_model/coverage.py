@@ -1515,7 +1515,7 @@ class FunctionCoverage(CoverageBase):
         end ((int, int)), optional):
             Tuple with function end line and column.
         excluded (bool, optional):
-            Whether this line is excluded by a marker.
+            Whether this function is excluded by a marker.
 
         >>> filecov = FileCoverage("file.c", filename="file.c")
         >>> FunctionCoverage(filecov, "func.gcov", mangled_name="foo()", demangled_name="bar()", lineno=5, count=3, blocks=0.5)
@@ -1830,7 +1830,7 @@ class FunctionCoverage(CoverageBase):
 class FileCoverage(CoverageBase):
     """Represent coverage information about a file."""
 
-    __slots__ = "filename", "functions", "lines", "lines_keys_by_lineno"
+    __slots__ = "filename", "functions", "lines", "line_keys_by_lineno"
 
     def __init__(
         self,
@@ -1842,7 +1842,30 @@ class FileCoverage(CoverageBase):
         self.filename: str = filename
         self.functions = CoverageDict[str, FunctionCoverage]()
         self.lines = CoverageDict[LinesKeyType, LineCoverage]()
-        self.lines_keys_by_lineno: dict[int, Set[LinesKeyType]] = {}
+        self.line_keys_by_lineno: dict[int, Set[LinesKeyType]] = {}
+
+    def merge_lines(self, options: MergeOptions) -> None:
+        """Get a copy of the file coverage object with all mergeable data merged."""
+        for lineno, linecov_keys in self.line_keys_by_lineno.items():
+            linecov_keys = self.line_keys_by_lineno[lineno]
+            # Merge the key data if there are more than one key
+            if len(linecov_keys) > 1:
+                first_linecov_key, *other_linecov_keys = linecov_keys
+                # Remove the infos
+                function_name_merged = ""
+                linecov = self.lines[first_linecov_key]
+                self.lines.pop(first_linecov_key)
+                self.line_keys_by_lineno[linecov.lineno].clear()
+                # Add the linecov with the updated key
+                linecov.function_name = function_name_merged
+                self.line_keys_by_lineno[linecov.lineno].add(linecov.key)
+                self.lines[linecov.key] = linecov
+                self.line_keys_by_lineno[lineno] = set([first_linecov_key])
+                for source_linecov in [
+                    self.lines.pop(key) for key in other_linecov_keys
+                ]:
+                    source_linecov.function_name = function_name_merged
+                    linecov.merge(source_linecov, options)
 
     def presentable_filename(self, root_filter: re.Pattern[str]) -> str:
         """Mangle a filename so that it is suitable for a report."""
@@ -2007,9 +2030,9 @@ class FileCoverage(CoverageBase):
         else:
             self.lines[key] = linecov
             self.lines[key].parent = self
-            if linecov.lineno not in self.lines_keys_by_lineno:
-                self.lines_keys_by_lineno[linecov.lineno] = set[LinesKeyType]()
-            self.lines_keys_by_lineno[linecov.lineno].add(key)
+            if linecov.lineno not in self.line_keys_by_lineno:
+                self.line_keys_by_lineno[linecov.lineno] = set[LinesKeyType]()
+            self.line_keys_by_lineno[linecov.lineno].add(key)
 
         return self.lines[key]
 

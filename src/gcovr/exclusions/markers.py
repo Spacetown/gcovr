@@ -112,8 +112,8 @@ def _process_exclude_branch_source(
             for prefix, match in excl_pattern_compiled.findall(code):
                 columnno += len(prefix)
                 location = f"{filecov.filename}:{lineno}:{columnno}"
-                if lineno in filecov.lines_keys_by_lineno:
-                    for key in sorted(filecov.lines_keys_by_lineno[lineno]):
+                if lineno in filecov.line_keys_by_lineno:
+                    for key in sorted(filecov.line_keys_by_lineno[lineno]):
                         if (
                             filecov.lines[key].function_name is None
                             or filecov.lines[key].block_ids is None
