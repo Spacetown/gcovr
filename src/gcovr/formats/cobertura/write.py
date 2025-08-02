@@ -19,7 +19,9 @@
 
 from dataclasses import dataclass
 import os
-from lxml import etree  # nosec # We only write XML files
+from lxml import etree
+
+from ...data_model.merging import get_merge_mode_from_options  # nosec # We only write XML files
 
 from ...options import Options
 
@@ -32,7 +34,9 @@ from ...data_model.stats import CoverageStat, SummarizedStats
 def write_report(
     covdata: CoverageContainer, output_file: str, options: Options
 ) -> None:
-    """produce an XML report in the Cobertura format"""
+    """Produce an XML report in the Cobertura format."""
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
 
     stats = covdata.stats
 

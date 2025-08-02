@@ -17,7 +17,9 @@
 #
 # ****************************************************************************
 
-from lxml import etree  # nosec # We only write XML files
+from lxml import etree
+
+from ...data_model.merging import get_merge_mode_from_options  # nosec # We only write XML files
 
 from ...data_model.container import CoverageContainer
 from ...options import Options
@@ -27,7 +29,9 @@ from ...utils import write_xml_output
 def write_report(
     covdata: CoverageContainer, output_file: str, options: Options
 ) -> None:
-    """produce an XML report in the SonarQube generic coverage format"""
+    """Produce an XML report in the SonarQube generic coverage format."""
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
 
     root_elem = etree.Element("coverage")
     root_elem.set("version", "1")
@@ -38,7 +42,9 @@ def write_report(
         file_node = etree.Element("file")
         file_node.set("path", filename)
 
-        for linecov in filecov.lines.values():
+        for linecov in sorted(
+            filecov.lines.values(), key=lambda linecov: linecov.lineno
+        ):
             if linecov.is_reportable:
                 line_node = etree.Element("lineToCover")
                 line_node.set("lineNumber", str(linecov.lineno))

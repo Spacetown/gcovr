@@ -20,6 +20,8 @@
 import csv
 from typing import Optional
 
+from ...data_model.merging import get_merge_mode_from_options
+
 from ...data_model.container import CoverageContainer
 from ...data_model.stats import CoverageStat
 from ...options import Options
@@ -31,16 +33,18 @@ def write_report(
 ) -> None:
     """produce gcovr csv report"""
 
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
+    sorted_keys = covdata.sort_coverage(
+        sort_key=options.sort_key,
+        sort_reverse=options.sort_reverse,
+        by_metric="branch" if options.sort_branches else "line",
+    )
+
     # Open output without translation of line endings.
     # The CSV writer uses as default line endings "\r\n" (according to
     # https://datatracker.ietf.org/doc/html/rfc4180)
     with open_text_for_writing(output_file, "coverage.csv", newline="") as fh:
-        sorted_keys = covdata.sort_coverage(
-            sort_key=options.sort_key,
-            sort_reverse=options.sort_reverse,
-            by_metric="branch" if options.sort_branches else "line",
-        )
-
         writer = csv.writer(fh)
         writer.writerow(
             (

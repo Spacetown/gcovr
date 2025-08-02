@@ -19,6 +19,8 @@
 
 from typing import Iterable
 
+from ...data_model.merging import get_merge_mode_from_options
+
 from ...data_model.container import CoverageContainer
 from ...data_model.coverage import FileCoverage
 from ...data_model.stats import CoverageStat
@@ -38,6 +40,8 @@ def write_report(
     covdata: CoverageContainer, output_file: str, options: Options
 ) -> None:
     """produce the classic gcovr text report"""
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
 
     with open_text_for_writing(output_file, "coverage.txt") as fh:
         # Header

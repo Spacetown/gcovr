@@ -24,6 +24,8 @@ from jinja2 import (
     PackageLoader,
 )
 
+from ...data_model.merging import get_merge_mode_from_options
+
 from ...data_model.container import CoverageContainer
 from ...data_model.stats import SummarizedStats
 from ...options import Options
@@ -56,6 +58,8 @@ def write_report(
         "summary": _summary_from_stats(covdata.stats, options),
     }
 
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
     sorted_keys = covdata.sort_coverage(
         sort_key=options.sort_key,
         sort_reverse=options.sort_reverse,

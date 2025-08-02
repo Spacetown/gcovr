@@ -30,8 +30,6 @@ class CoberturaHandler(BaseHandler):
     @classmethod
     def get_options(cls) -> list[Union[GcovrConfigOption, str]]:
         return [
-            # Global options used for merging.
-            "merge_mode_functions",
             # Local options
             GcovrConfigOption(
                 "cobertura",

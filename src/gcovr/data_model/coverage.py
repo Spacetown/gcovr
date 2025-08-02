@@ -1963,11 +1963,12 @@ class FileCoverage(CoverageBase):
         )
         for data_dict_line in data_dict["lines"]:
             LineCoverage.deserialize(filecov, data_dict_line)
-        merge_options = (
-            DEFAULT_MERGE_OPTIONS
-            if options is None
-            else get_merge_mode_from_options(options)
+
+        merge_options = get_merge_mode_from_options(
+            # Here we want to keep the functions as they are.
+            Options(merge_mode_functions="separate") if options is None else options
         )
+
         for data_dict_function in data_dict["functions"]:
             FunctionCoverage.deserialize(
                 filecov,

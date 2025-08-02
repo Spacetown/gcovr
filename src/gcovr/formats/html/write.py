@@ -370,7 +370,7 @@ def write_report(
     )
 
     if options.html_nested:
-        covdata.populate_directories(sorted_keys, options.root_filter)
+        covdata.populate_directories(sorted_keys, options)
 
     cdata_fname = dict[str, str]()
     cdata_sourcefile = dict[str, Optional[str]]()

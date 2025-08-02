@@ -21,7 +21,9 @@
 
 from dataclasses import dataclass
 import logging
-from lxml import etree  # nosec # We only write XML files
+from lxml import etree
+
+from ...data_model.merging import get_merge_mode_from_options  # nosec # We only write XML files
 
 from ...data_model.container import CoverageContainer
 from ...data_model.coverage import LineCoverage
@@ -34,7 +36,9 @@ LOGGER = logging.getLogger("gcovr")
 def write_report(
     covdata: CoverageContainer, output_file: str, options: Options
 ) -> None:
-    """produce an XML report in the Cobertura format"""
+    """Produce a XML report in the Cobertura format."""
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
 
     timestamp = str(int(options.timestamp.timestamp()))
 
@@ -75,7 +79,9 @@ def write_report(
         loc = 0
         ncloc = 0
         covered_elements = 0
-        for linecov in filecov.lines.values():
+        for linecov in sorted(
+            filecov.lines.values(), key=lambda linecov: linecov.lineno
+        ):
             loc = linecov.lineno
             if linecov.is_reportable:
                 ncloc += 1

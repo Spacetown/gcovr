@@ -46,6 +46,8 @@ class BaseHandler:
             "starting_dir",
             "filter",
             "exclude",
+            # Global options used for merging.
+            "merge_mode_functions",
         ]
         option_dict = {}
         for name in global_options + [

@@ -18,7 +18,9 @@
 # ****************************************************************************
 
 from dataclasses import dataclass
-from lxml import etree  # nosec # We only write XML files
+from lxml import etree
+
+from ...data_model.merging import get_merge_mode_from_options  # nosec # We only write XML files
 
 from ...data_model.container import CoverageContainer
 from ...data_model.stats import CoverageStat, SummarizedStats
@@ -29,7 +31,9 @@ from ...utils import write_xml_output
 def write_report(
     covdata: CoverageContainer, output_file: str, options: Options
 ) -> None:
-    """produce an XML report in the JaCoCo format"""
+    """Produce an XML report in the JaCoCo format."""
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
 
     root_elem = etree.Element("report")
     root_elem.set("name", options.jacoco_report_name)
@@ -54,7 +58,9 @@ def write_report(
         source_elem = etree.Element("sourcefile")
         source_elem.set("name", fname)
 
-        for linecov in filecov.lines.values():
+        for linecov in sorted(
+            filecov.lines.values(), key=lambda linecov: linecov.lineno
+        ):
             line_elem = etree.SubElement(source_elem, "line")
             line_elem.set("nr", str(linecov.lineno))
             if linecov.is_reportable:

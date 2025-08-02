@@ -26,6 +26,8 @@ import shutil
 import subprocess  # nosec # Commands are trusted.
 from typing import Any, Optional
 
+from ...data_model.merging import get_merge_mode_from_options
+
 from ...data_model.container import CoverageContainer
 from ...data_model.coverage import FileCoverage
 from ...options import Options
@@ -35,13 +37,14 @@ from ...utils import get_md5_hexdigest, write_json_output
 def write_report(
     covdata: CoverageContainer, output_file: str, options: Options
 ) -> None:
-    """
-    Outputs a JSON report in the Coveralls API coverage format
+    """Outputs a JSON report in the Coveralls API coverage format.
 
     @param covdata: is a dictionary of file coverage objects, keyed with an absolute filepath
     @param output_file: is the name of the file to create
     @param options: options object
     """
+    covdata = covdata.deep_copy()
+    covdata.merge_lines(get_merge_mode_from_options(options))
 
     # Create object to collect coverage data (https://docs.coveralls.io/api-jobs-endpoint#json-object-job)
     json_dict = dict[str, Any]()
@@ -198,7 +201,7 @@ def _make_source_file(filecov: FileCoverage, options: Options) -> dict[str, Any]
     branches = list[Optional[int]]()
     source_file["coverage"] = coverage
     # source_file['branches'] = []
-    for linecov in filecov.lines.values():
+    for linecov in sorted(filecov.lines.values(), key=lambda linecov: linecov.lineno):
         # Comment lines are not collected in `covdata`, but must
         # be reported to coveralls (fill missing lines)
         _extend_with_none(coverage, linecov.lineno - 1)
