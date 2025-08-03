@@ -2085,16 +2085,16 @@ class FileCoverage(CoverageBase):
 
     def line_coverage(self) -> CoverageStat:
         """Return the line coverage statistic of the file."""
-        total = 0
-        covered = 0
 
+        reportaple_lines = set[int]()
+        covered_lines = set[int]()
         for linecov in self.lines.values():
             if linecov.is_reportable:
-                total += 1
+                reportaple_lines.add(linecov.lineno)
                 if linecov.is_covered:
-                    covered += 1
+                    covered_lines.add(linecov.lineno)
 
-        return CoverageStat(covered, total)
+        return CoverageStat(len(covered_lines), len(reportaple_lines))
 
     def branch_coverage(self) -> CoverageStat:
         """Return the branch coverage statistic of the file."""
