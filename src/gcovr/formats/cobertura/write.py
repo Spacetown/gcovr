@@ -74,31 +74,32 @@ def write_report(
         # The Cobertura DTD requires a methods section, which isn't
         # trivial to get from gcov (so we will leave it blank)
         methods_elem = etree.SubElement(class_elem, "methods")
-        for functioncov in filecov.functions.values():
-            filtered_filecov = filecov.filter_for_function(functioncov)
-            function_stats = filtered_filecov.stats
-            name, signature = functioncov.name_and_signature
-            method_elem = etree.SubElement(methods_elem, "method")
-            method_elem.set("name", name)
-            method_elem.set("signature", signature)
-            method_elem.set("line-rate", _rate(function_stats.line))
-            method_elem.set("branch-rate", _rate(function_stats.branch))
-            method_elem.set("complexity", "0.0")
-            lines_elem = etree.SubElement(method_elem, "lines")
-            for linecov in filtered_filecov.lines.values():
-                if linecov.is_reportable:
-                    lines_elem.append(_line_element([linecov]))
-
         lines_elem = etree.SubElement(class_elem, "lines")
 
-        for _, linecov_keys in sorted(filecov.lines_keys_by_lineno.items()):
-            linecov_items = [
-                filecov.lines[key]
-                for key in linecov_keys
-                if filecov.lines[key].is_reportable
-            ]
-            if linecov_items:
-                lines_elem.append(_line_element(linecov_items))
+        if filecov.functions:
+            for functioncov in filecov.functions.values():
+                filtered_filecov = filecov.filter_for_function(functioncov)
+                function_stats = filtered_filecov.stats
+                name, signature = functioncov.name_and_signature
+                method_elem = etree.SubElement(methods_elem, "method")
+                method_elem.set("name", name)
+                method_elem.set("signature", signature)
+                method_elem.set("line-rate", _rate(function_stats.line))
+                method_elem.set("branch-rate", _rate(function_stats.branch))
+                method_elem.set("complexity", "0.0")
+                lines_elem = etree.SubElement(method_elem, "lines")
+                for linecov in filtered_filecov.lines.values():
+                    if linecov.is_reportable:
+                        lines_elem.append(_line_element([linecov]))
+        else:
+            for _, linecov_keys in sorted(filecov.lines_keys_by_lineno.items()):
+                linecov_items = [
+                    filecov.lines[key]
+                    for key in linecov_keys
+                    if filecov.lines[key].is_reportable
+                ]
+                if linecov_items:
+                    lines_elem.append(_line_element(linecov_items))
 
         stats = filecov.stats
 
