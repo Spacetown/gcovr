@@ -66,6 +66,7 @@ which may not be the same as the input value.
 
 from __future__ import annotations
 from abc import abstractmethod
+import copy
 import logging
 import os
 import re
@@ -1854,6 +1855,57 @@ class FileCoverage(CoverageBase):
         self.functions = CoverageDict[str, FunctionCoverage]()
         self.lines = CoverageDict[LinesKeyType, LineCoverage]()
         self.lines_keys_by_lineno: dict[int, Set[LinesKeyType]] = {}
+
+    def merge_lines(self) -> "FileCoverage":
+        """Get a copy of the file coverage object with all mergable data merged."""
+        filecov = FileCoverage(
+            copy.deepcopy(self.data_sources),
+            filename=self.filename,
+        )
+        for functioncov in self.functions.values():
+            for lineno in functioncov.count.keys():
+                filecov.insert_function_coverage(
+                    copy.deepcopy(functioncov.data_sources),
+                    mangled_name=functioncov.mangled_name,
+                    demangled_name=functioncov.demangled_name,
+                    lineno=lineno,
+                    count=functioncov.count[lineno],
+                    blocks=functioncov.blocks[lineno],
+                    start=None
+                    if functioncov.start is None
+                    else functioncov.start[lineno],
+                    end=None if functioncov.end is None else functioncov.end[lineno],
+                    excluded=functioncov.excluded[lineno],
+                )
+        for _, linecov_keys in sorted(self.lines_keys_by_lineno.items()):
+            linecov_items = [self.lines[key] for key in linecov_keys]
+            block_ids = None
+            if any(
+                linecov.block_ids
+                for linecov in linecov_items
+                if linecov.block_ids is not None
+            ):
+                block_ids = list[int]()
+                for linecov in linecov_items:
+                    if linecov.block_ids is not None:
+                        block_ids += linecov.block_ids
+                block_ids = list(sorted(set(block_ids)))
+            data_sources = set[tuple[str, ...]]()
+            for linecov in linecov_items:
+                data_sources.update(linecov.data_sources)
+            filecov.insert_line_coverage(
+                data_sources,
+                lineno=linecov_items[0].lineno,
+                count=sum(linecov.count for linecov in linecov_items),
+                function_name=";".join(
+                    linecov.function_name or "" for linecov in linecov_items
+                ),
+                block_ids=block_ids,
+                md5=linecov_items[0].md5,
+                excluded=any(linecov.excluded for linecov in linecov_items),
+            )
+
+        return filecov
 
     def presentable_filename(self, root_filter: re.Pattern[str]) -> str:
         """Mangle a filename so that it is suitable for a report."""

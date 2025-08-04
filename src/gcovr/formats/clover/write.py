@@ -34,7 +34,7 @@ LOGGER = logging.getLogger("gcovr")
 def write_report(
     covdata: CoverageContainer, output_file: str, options: Options
 ) -> None:
-    """produce an XML report in the Cobertura format"""
+    """Produce a XML report in the Cobertura format"""
 
     timestamp = str(int(options.timestamp.timestamp()))
 
@@ -54,6 +54,7 @@ def write_report(
     packages = dict[str, PackageData]()
 
     for _, filecov in sorted(covdata.items()):
+        filecov = filecov.merge_lines()
         filename = filecov.presentable_filename(options.root_filter)
         if "/" in filename:
             directory, fname = filename.rsplit("/", 1)

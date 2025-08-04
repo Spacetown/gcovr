@@ -56,6 +56,7 @@ def write_report(
     packages = dict[str, PackageData]()
 
     for _, filecov in sorted(covdata.items()):
+        filecov = filecov.merge_lines()
         filename = filecov.presentable_filename(options.root_filter)
         if "/" in filename:
             directory, fname = filename.rsplit("/", 1)
