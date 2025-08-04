@@ -19,6 +19,7 @@
 
 from dataclasses import dataclass
 import os
+from typing import List
 from lxml import etree  # nosec # We only write XML files
 
 from ...options import Options
@@ -86,13 +87,18 @@ def write_report(
             lines_elem = etree.SubElement(method_elem, "lines")
             for linecov in filtered_filecov.lines.values():
                 if linecov.is_reportable:
-                    lines_elem.append(_line_element(linecov))
+                    lines_elem.append(_line_element([linecov]))
 
         lines_elem = etree.SubElement(class_elem, "lines")
 
-        for linecov in filecov.lines.values():
-            if linecov.is_reportable:
-                lines_elem.append(_line_element(linecov))
+        for _, linecov_keys in sorted(filecov.lines_keys_by_lineno.items()):
+            linecov_items = [
+                filecov.lines[key]
+                for key in linecov_keys
+                if filecov.lines[key].is_reportable
+            ]
+            if linecov_items:
+                lines_elem.append(_line_element(linecov_items))
 
         stats = filecov.stats
 
@@ -148,12 +154,14 @@ def _rate(stat: CoverageStat) -> str:
     return str(covered / total)
 
 
-def _line_element(linecov: LineCoverage) -> etree._Element:
-    stat = linecov.branch_coverage()
-
+def _line_element(linecov_items: List[LineCoverage]) -> etree._Element:
+    stats = [linecov.branch_coverage() for linecov in linecov_items]
+    stat = CoverageStat(
+        covered=sum(s.covered for s in stats), total=sum(s.total for s in stats)
+    )
     elem = etree.Element("line")
-    elem.set("number", str(linecov.lineno))
-    elem.set("hits", str(linecov.count))
+    elem.set("number", str(linecov_items[0].lineno))
+    elem.set("hits", str(sum(linecov.count for linecov in linecov_items)))
 
     if not stat.total:
         elem.set("branch", "false")
