@@ -72,15 +72,14 @@ def write_report(
         class_metrics = _metrics_element()
         class_elem.append(class_metrics)
 
-        loc = 0
+        loc = max(linecov_collection.lineno for linecov_collection in filecov.lines())
         ncloc = 0
-        covered_elements = 0
+        covered_lines = 0
         for linecov in filecov.linecov():
-            loc = linecov.lineno
             if linecov.is_reportable:
                 ncloc += 1
                 if linecov.is_covered:
-                    covered_elements += 1
+                    covered_lines += 1
                 file_elem.append(_line_element(linecov))
 
         file_elem.set("name", fname)
@@ -90,20 +89,20 @@ def write_report(
         file_metrics.set("loc", str(loc))
         file_metrics.set("ncloc", str(ncloc))
         file_metrics.set("elements", str(ncloc))
-        file_metrics.set("coveredelements", str(covered_elements))
+        file_metrics.set("coveredelements", str(covered_lines))
 
         class_metrics.set("elements", str(ncloc))
-        class_metrics.set("coveredelements", str(covered_elements))
+        class_metrics.set("coveredelements", str(covered_lines))
 
         package_data.files_xml[fname] = file_elem
         package_data.loc += loc
         package_data.ncloc += ncloc
-        package_data.covered_elements += covered_elements
+        package_data.covered_elements += covered_lines
 
         project_data.files += 1
         project_data.loc += loc
         project_data.ncloc += ncloc
-        project_data.covered_elements += covered_elements
+        project_data.covered_elements += covered_lines
 
     project_metrics.set("packages", str(len(packages)))
     project_metrics.set("classes", str(project_data.files))
