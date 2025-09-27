@@ -809,6 +809,10 @@ def get_directory_data(
     relative_path = cdata_fname[covdata_dir.dirname]
     if relative_path == ".":
         relative_path = ""
+    elif relative_path.startswith(root_info.directory):
+        relative_path = relative_path[len(root_info.directory) :]
+    if len(relative_path) and relative_path[-1] == "/":
+        relative_path = relative_path[:-1]
     directory_data = dict[str, Any](
         {
             "dirname": (
@@ -816,6 +820,7 @@ def get_directory_data(
                 if cdata_fname[covdata_dir.dirname]
                 else "/"
             ),
+            "relative_path": relative_path,
         }
     )
 
