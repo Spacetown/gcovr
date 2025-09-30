@@ -169,7 +169,6 @@ def set_environment(session: nox.Session, cc: Optional[str] = None) -> None:
 
     cc_path, cc_file = os.path.split(cc)
 
-    session.env["GCOVR_TEST_SUITE"] = "1"
     session.env["CC"] = os.path.join(cc_path, cc_file)
     session.env["CFLAGS"] = "--this_flag_does_not_exist"
     session.env["CXX"] = os.path.join(
