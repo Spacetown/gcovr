@@ -346,16 +346,8 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
                     reason="Condition coverage needs at least gcc-14.",
                 ),
                 pytest.mark.skipif(
-                    name in ["bazel"] and (IS_WINDOWS or IS_MACOS and IS_GCC),
-                    reason="Bazel test not working on Windows or on MacOs (with gcc).",
-                ),
-                pytest.mark.skipif(
                     name == "simple1-drive-subst" and not IS_WINDOWS,
                     reason="drive substitution only available on Windows",
-                ),
-                pytest.mark.skipif(
-                    name == "cmake_gtest" and not GCOVR_ISOLATED_TEST,
-                    reason="only available in docker",
                 ),
                 pytest.mark.skipif(
                     name == "gcov-no_working_dir_found"
@@ -409,22 +401,6 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
                 pytest.mark.xfail(
                     name == "gcc-abspath" and (IS_CLANG or CC_REFERENCE_VERSION < 8),
                     reason="Option -fprofile-abs-path is supported since gcc-8",
-                ),
-                pytest.mark.xfail(
-                    name
-                    in [
-                        "cmake_oos",
-                        "cmake_oos_ninja",
-                        "coexisting_object_directories-from_build_dir",
-                        "coexisting_object_directories-from_build_dir-without_search_dir",
-                        "coexisting_object_directories-from_build_dir-without_object_dir",
-                        "coexisting_object_directories-from_root_dir",
-                        "coexisting_object_directories-from_root_dir-without_search_dir",
-                        "coexisting_object_directories-from_root_dir-without_object_dir",
-                    ]
-                    and IS_MACOS
-                    and CC_REFERENCE == "gcc-13",
-                    reason="There are compiler errors from include of iostream",
                 ),
             ]
 

@@ -163,7 +163,7 @@ exclude = ["build/.*"]
 [tool.ruff]
 exclude = [
     "__pycache__",
-    "tests/cmake_gtest/build/_deps",
+    "tests/cmake-gtest/build/_deps",
     "src/gcovr/version.py",
 ]
 
@@ -190,7 +190,7 @@ quote-style = "double"
 assert_used.skips = ["*_test.py", "*test_*.py"]
 
 [tool.pytest.ini_options]
-addopts = "-v --timeout=120 --doctest-modules --ignore-glob=*/linked/subdir/* --ignore-glob */*bazel*/* --ignore-glob */.nox*/*"
+addopts = "-v --timeout=120 --doctest-modules --ignore-glob=*/linked/subdir/* --ignore-glob */output/* --ignore-glob */.nox*/*"
 env = [
     "D:CC=gcc",
     "D:CXX=g++",

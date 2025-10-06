@@ -27,7 +27,7 @@ import platform
 import re
 import shutil
 import subprocess  # nosec
-from sys import stderr
+from sys import stderr, stdout
 from typing import Callable, Iterable, Iterator, List, Optional, Union
 from unittest import mock
 import zipfile
@@ -63,6 +63,7 @@ CFLAGS = [
 if "condition-coverage" in CC_HELP_OUTPUT:
     CFLAGS.append("-fcondition-coverage")
 CXXFLAGS = CFLAGS.copy()
+
 
 BASE_DIRECTORY = os.path.split(os.path.abspath(__file__))[0]
 GCOVR_ISOLATED_TEST = os.getenv("GCOVR_ISOLATED_TEST") == "zkQEVaBpXF1i"
@@ -237,7 +238,9 @@ class GcovrTestCompare:
                             yield self.output_dir / test_file, reference_file
 
         if not seen_files:
-            raise RuntimeError("No reference files found.")
+            raise RuntimeError(
+                f"No reference files found for pattern {' '.join(output_pattern)}."
+            )
 
     def __update_reference_data(  # pragma: no cover
         self, reference_file: Path, content: str, encoding: str
@@ -534,6 +537,10 @@ class GcovrTestExec:
         return not IS_GCC
 
     @staticmethod
+    def is_in_gcc_help(string) -> bool:
+        return string in CC_HELP_OUTPUT
+
+    @staticmethod
     def use_gcc_json_format() -> bool:
         """Query if we can use the GCC JSON intermediate format."""
         return USE_GCC_JSON_INTERMEDIATE_FORMAT
@@ -558,9 +565,9 @@ class GcovrTestExec:
     def run(
         self,
         *args: Union[str, Path],
-        env: Optional[dict[str, str]] = None,
         cwd: Optional[Path] = None,
-    ) -> None:
+        env: Optional[dict[str, str]] = None,
+    ) -> subprocess.CompletedProcess[str]:
         """Run the given arguments."""
         cmd = [*args]
         if cwd is None:
@@ -582,13 +589,21 @@ class GcovrTestExec:
         if env:
             new_env.update(env)
 
-        subprocess.run(  # nosec
+        # pylint: disable=subprocess-run-check
+        process = subprocess.run(  # nosec
             cmd,
-            check=True,
+            capture_output=True,
+            encoding="utf-8",
             env=new_env,
             cwd=str(cwd),
         )
+        print(process.stdout, file=stdout)
+        print(process.stderr, file=stderr)
+        process.check_returncode()
+
         print("-------------- done --------------\n", file=stderr)
+
+        return process
 
     def run_parallel(
         self,
@@ -636,13 +651,21 @@ class GcovrTestExec:
 
             print(f"\n[{index}] done", file=stderr)
 
-    def cc(self, *args: Union[str, Path]) -> None:
+    def cc(
+        self,
+        *args: Union[str, Path],
+        cwd: Optional[Path] = None,
+    ) -> None:
         """Run CC with the given arguments."""
-        self.run(CC, *CFLAGS, *args)
+        self.run(CC, *CFLAGS, *args, cwd=cwd)
 
-    def cxx(self, *args: Union[str, Path]) -> None:
+    def cxx(
+        self,
+        *args: Union[str, Path],
+        cwd: Optional[Path] = None,
+    ) -> None:
         """Run CXX with the given arguments."""
-        self.run(CXX, *CXXFLAGS, *args)
+        self.run(CXX, *CXXFLAGS, *args, cwd=cwd)
 
     def cc_compile(
         self,
@@ -650,15 +673,14 @@ class GcovrTestExec:
         *,
         target: Optional[str] = None,
         options: Optional[List[str]] = None,
-    ) -> Path:
+        cwd: Optional[Path] = None,
+    ) -> str:
         """Compile the given source and return the target."""
-        target_absolute = self.output_dir / (
-            (Path(source).name + ".o") if target is None else target
-        )
+        target = (Path(source).name + ".o") if target is None else target
         if options is None:
             options = []
-        self.cc(*options, "-c", source, "-o", target_absolute)
-        return target_absolute
+        self.cc(*options, "-c", source, "-o", target, cwd=cwd)
+        return target
 
     def cxx_compile(
         self,
@@ -666,27 +688,32 @@ class GcovrTestExec:
         *,
         target: Optional[str] = None,
         options: Optional[List[str]] = None,
-    ) -> Path:
+        cwd: Optional[Path] = None,
+    ) -> str:
         """Compile the given source and return the target."""
-        target_absolute = self.output_dir / (
-            (Path(source).name + ".o") if target is None else target
-        )
+        target = (Path(source).name + ".o") if target is None else target
         if options is None:
             options = []
-        self.cxx(*options, "-c", source, "-o", target_absolute)
-        return target_absolute
-
-    def cc_link(self, executable: Union[str, Path], *objects: Union[str, Path]) -> Path:
-        """Link the given objects and return the full path of the executable."""
-        target = self.output_dir / executable
-        self.cc(*objects, "-o", target)
+        self.cxx(*options, "-c", source, "-o", target, cwd=cwd)
         return target
 
-    def cxx_link(self, executable: str, *objects: Union[str, Path]) -> Path:
+    def cc_link(
+        self,
+        executable: Union[str, Path],
+        *args: Union[str, Path],
+        cwd: Optional[Path] = None,
+    ) -> None:
         """Link the given objects and return the full path of the executable."""
-        target = self.output_dir / executable
-        self.cxx(*objects, "-o", target)
-        return target
+        self.cc(*args, "-o", executable, cwd=cwd)
+
+    def cxx_link(
+        self,
+        executable: str,
+        *args: Union[str, Path],
+        cwd: Optional[Path] = None,
+    ) -> None:
+        """Link the given objects and return the full path of the executable."""
+        self.cxx(*args, "-o", executable, cwd=cwd)
 
     def gcovr(
         self,
@@ -694,16 +721,18 @@ class GcovrTestExec:
         cwd: Optional[Path] = None,
         env: Optional[dict[str, str]] = None,
         use_main: bool = False,
-    ) -> None:
+    ) -> subprocess.CompletedProcess[str]:
         """Run GCOVR with the given arguments"""
         if env is None:
             env = dict[str, str]()
         if use_main:
             with chdir(cwd or self.output_dir):
                 with mock.patch.dict(os.environ, env):
-                    gcovr_main([str(a) for a in args])
+                    return subprocess.CompletedProcess(
+                        args, gcovr_main([str(a) for a in args])
+                    )
         else:
-            self.run("gcovr", *args, cwd=cwd, env=env)
+            return self.run("gcovr", *args, cwd=cwd, env=env)
 
 
 @pytest.fixture(scope="function")
