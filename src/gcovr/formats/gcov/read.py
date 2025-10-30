@@ -511,6 +511,7 @@ def process_datafile(
         f"GCOV produced the following errors processing {filename}:\n"
         f"\t{errors_output}\n"
         "\t(GCOVR could not infer a working directory that resolved it.)\n"
+        f"{'' if options.verbose else 'Use option --verbose to get extended information.'}\n"
         "To ignore this error use option --gcov-ignore-errors=no_working_dir_found."
     )
     LOGGER.error(errors_output)
@@ -573,6 +574,9 @@ class GcovProgram:
 
         def __exit__(self, *_: Any) -> None:
             self.lock.release()
+
+    class GcovExecutionError(Exception):
+        """Exception for errors in gcov execution."""
 
     def __init__(self, cmd: str) -> None:
         with GcovProgram.LockContext(GcovProgram.__lock):
@@ -718,7 +722,9 @@ class GcovProgram:
             **kwargs,
         )
 
-    def run_with_args(self, args: list[str], **kwargs: Any) -> tuple[str, str]:
+    def run_with_args(
+        self, args: list[str], cwd: str, **kwargs: Any
+    ) -> tuple[str, str]:
         """Run the gcov program.
 
         >>> import platform
@@ -728,30 +734,30 @@ class GcovProgram:
         ...     GcovProgram("bash").run_with_args(["-c", "exit 1"])
         Traceback (most recent call last):
         ...
-        RuntimeError: GCOV returncode was 1.
+        GcovProgram.GcovExecutionError: GCOV returncode was 1.
         >>> if platform.system() == "Windows":
         ...     GcovProgram("bash").run_with_args(["-c", "exit 1"])
         ... else:
         ...     print("kill not working on Windows")  # doctest: +SKIP
         Traceback (most recent call last):
         ...
-        RuntimeError: GCOV returncode was 4294967295.
+        GcovProgram.GcovExecutionError: GCOV returncode was 4294967295.
         >>> if platform.system() == "Windows":
         ...     print("kill not working on Windows")  # doctest: +SKIP
         ... else:
         ...     GcovProgram("bash").run_with_args(["-c", "kill $$"])
         Traceback (most recent call last):
         ...
-        RuntimeError: GCOV returncode was -15 (exited by signal).
+        GcovProgram.GcovExecutionError: GCOV returncode was -15 (exited by signal).
         >>> if platform.system() == "Windows":
         ...     GcovProgram("bash").run_with_args(["-c", "kill $$"])
         ... else:
         ...     print("kill not working on Windows")  # doctest: +SKIP
         Traceback (most recent call last):
         ...
-        RuntimeError: GCOV returncode was 15.
+        GcovProgram.GcovExecutionError: GCOV returncode was 15.
         """
-        gcov_process = self.__get_gcov_process(args, **kwargs)
+        gcov_process = self.__get_gcov_process(args, cwd=cwd, **kwargs)
         out, err = gcov_process.communicate()
         LOGGER.debug(
             f"GCOV return code was {gcov_process.returncode}, stdout was:\n{out}<<, stderr was:\n{err}<<"
@@ -763,12 +769,14 @@ class GcovProgram:
                 found = output_re.search(line.strip())
                 if found is not None:
                     fname = found.group(1)
+                    if not os.path.isabs(fname):
+                        fname = os.path.join(cwd, fname)
                     if os.path.exists(fname):
                         os.remove(fname)
 
         if gcov_process.returncode < 0:
             remove_generated_files()
-            raise RuntimeError(
+            raise self.GcovExecutionError(
                 f"GCOV returncode was {gcov_process.returncode} (exited by signal).\n"
                 f"Stdout of gcov was >>{out}<< End of stdout\n"
                 f"Stderr of gcov was >>{err}<< End of stderr"
@@ -776,7 +784,7 @@ class GcovProgram:
 
         if gcov_process.returncode not in GcovProgram.__exitcode_to_ignore:
             remove_generated_files()
-            raise RuntimeError(
+            raise self.GcovExecutionError(
                 f"GCOV returncode was {gcov_process.returncode}.\n"
                 f"Stdout of gcov was >>{out}<< End of stdout\n"
                 f"Stderr of gcov was >>{err}<< End of stderr"
@@ -902,9 +910,13 @@ def run_gcov_and_process_files(
                 f"Trouble processing {abs_filename!r} with working directory {chdir!r}.\n"
                 f"Stdout of gcov was >>{out}<< End of stdout\n"
                 f"Stderr of gcov was >>{err}<< End of stderr\n"
-                f"Exception was >>{str(exc)}<< End of stderr\n"
-                f"Current processed gcov file was {filename!r}.\n"
-                "Use option --verbose to get extended information."
+                f"Exception was >>{str(exc)}<< End of exception\n"
+            )
+        except GcovProgram.GcovExecutionError as exc:
+            done = False
+            error(
+                f"Trouble processing {abs_filename!r} with working directory {chdir!r}.\n"
+                f"{str(exc)}\n"
             )
         finally:
             if options.gcov_keep and done:
