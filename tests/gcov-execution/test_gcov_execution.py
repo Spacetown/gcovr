@@ -1,12 +1,20 @@
 from contextlib import contextmanager
 from pathlib import Path
-import platform
 import typing
 
 import pytest
 
-if typing.TYPE_CHECKING:
-    from tests.conftest import GcovrTestExec
+from tests.conftest import (
+    GCOVR_ISOLATED_TEST,
+    IS_DARWIN_HOST,
+    USE_GCC_JSON_INTERMEDIATE_FORMAT,
+    GcovrTestExec,
+)
+
+
+CHMOD_IS_WORKING = (
+    not GCOVR_ISOLATED_TEST or IS_DARWIN_HOST or USE_GCC_JSON_INTERMEDIATE_FORMAT
+)
 
 
 @contextmanager
@@ -24,18 +32,21 @@ def chmod(mode: int, *paths: Path) -> typing.Iterator[None]:
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows",
-    reason="Setting write protection on directory has no effect on Windows systems.",
+    CHMOD_IS_WORKING,
+    reason="Only available in docker on hosts != MacOs",
 )
 def test_ignore_output_error(gcovr_test_exec: "GcovrTestExec") -> None:
     """Test ignoring GCOV output errors."""
 
     (gcovr_test_exec.output_dir / "build").mkdir()
     gcovr_test_exec.cxx_link(
-        "build/testcase", gcovr_test_exec.cxx_compile("src/main.cpp")
+        "testcase",
+        "../src/main.cpp",
+        cwd=Path("build"),
     )
 
-    gcovr_test_exec.run("./build/testcase")
+    gcovr_test_exec.run("./testcase", cwd=Path("build"))
+
     with chmod(
         0o455 if gcovr_test_exec.is_darwin() else 0o555,
         gcovr_test_exec.output_dir / "src",
@@ -45,7 +56,6 @@ def test_ignore_output_error(gcovr_test_exec: "GcovrTestExec") -> None:
             "--verbose",
             "--json-pretty",
             "--json=coverage.json",
-            "--gcov-ignore-errors=output_error",
             "--root",
             "src",
             "build",
@@ -54,18 +64,21 @@ def test_ignore_output_error(gcovr_test_exec: "GcovrTestExec") -> None:
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows",
-    reason="Setting write protection on directory has no effect on Windows systems.",
+    CHMOD_IS_WORKING,
+    reason="Only available in docker on hosts != MacOs",
 )
 def test_no_working_dir_found(gcovr_test_exec: "GcovrTestExec") -> None:
     """Test gcov-no_working_dir_found logic."""
 
     (gcovr_test_exec.output_dir / "build").mkdir()
     gcovr_test_exec.cxx_link(
-        "build/testcase", gcovr_test_exec.cxx_compile("src/main.cpp")
+        "testcase",
+        "../src/main.cpp",
+        cwd=Path("build"),
     )
 
-    gcovr_test_exec.run("./build/testcase")
+    gcovr_test_exec.run("./testcase", cwd=Path("build"))
+
     with chmod(
         0o455 if gcovr_test_exec.is_darwin() else 0o555,
         gcovr_test_exec.output_dir / "src",
