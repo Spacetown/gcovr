@@ -70,6 +70,29 @@ def read_report(options: Options) -> CoverageContainer:
         find_files = find_existing_gcov_files
         process_file = process_existing_gcov_file
 
+    if options.gcov_allowed_working_directory_roots:
+        if options.gcov_use_existing_files:
+            LOGGER.info(
+                "GCOV not executed, option --gcov-allowed-working-directory-root not used."
+            )
+        else:
+            allowed_working_directory_roots = set(
+                options.gcov_allowed_working_directory_roots
+            )
+            allowed_working_directory_roots.update(
+                [os.path.abspath(p) for p in options.search_paths]
+            )
+            allowed_working_directory_roots.update(
+                [os.path.realpath(p) for p in options.search_paths]
+            )
+            options.gcov_allowed_working_directory_roots = list(
+                sorted(allowed_working_directory_roots)
+            )
+            LOGGER.debug(
+                "Allowed working directory roots: %s",
+                options.gcov_allowed_working_directory_roots,
+            )
+
     # Get data files
     for search_path in options.search_paths:
         datafiles.update(find_files(search_path, options.exclude_directory))
@@ -521,7 +544,23 @@ def process_datafile(
             potential_wd.append(wd)
             wd = os.path.dirname(wd)
 
-    for wd in potential_wd:
+    used_working_directories = []
+    if options.gcov_allowed_working_directory_roots:
+        for directory in potential_wd:
+            # Add directory to used_working_directories if it is a subdirectory of any allowed root
+            for allowed_root in options.gcov_allowed_working_directory_roots:
+                abs_allowed_root = os.path.abspath(allowed_root)
+                abs_directory = os.path.abspath(directory)
+                if (
+                    os.path.commonpath([abs_directory, abs_allowed_root])
+                    == abs_allowed_root
+                ):
+                    used_working_directories.append(directory)
+                    break
+    else:
+        used_working_directories = potential_wd
+
+    for wd in used_working_directories:
         done = run_gcov_and_process_files(
             abs_filename,
             covdata,

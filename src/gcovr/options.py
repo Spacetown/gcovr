@@ -69,7 +69,7 @@ def check_input_file(value: str, basedir: str | None = None) -> str:
 
 def relative_path(value: str, basedir: str | None = None) -> str:
     r"""
-    Make a absolute path if value is a relative path.
+    Make a relative path to the current working directory.
     """
     if not value:
         raise ArgumentTypeError("Should not be set to an empty string.") from None

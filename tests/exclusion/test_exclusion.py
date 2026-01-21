@@ -925,7 +925,7 @@ def test_gcov_exclude(gcovr_test_exec: "GcovrTestExec") -> None:
     )
 
     gcovr_test_exec.run("./subdir/testcase")
-    gcovr_test_exec.gcovr(
+    gcovr_options = [
         "--root=subdir",
         "--gcov-exclude-directory=.*/A/C(?:/.*)?",
         "--gcov-filter=.*",
@@ -933,5 +933,16 @@ def test_gcov_exclude(gcovr_test_exec: "GcovrTestExec") -> None:
         "--gcov-exclude=[Ff]ile.\\.cpp##.*",
         "--json-pretty",
         "--json=coverage.json",
+    ]
+    process = gcovr_test_exec.gcovr(
+        *gcovr_options,
+        "--gcov-allowed-working-directory-root=subdir",
+        use_main=True,
     )
+    assert process.returncode == 64
+    gcovr_test_exec.gcovr(
+        *gcovr_options,
+        "--gcov-allowed-working-directory-root=..",
+    )
+
     gcovr_test_exec.compare_json()

@@ -56,6 +56,18 @@ class GcovHandler(BaseHandler):
             "merge_mode_functions",
             # Local options
             GcovrConfigOption(
+                "gcov_allowed_working_directory_roots",
+                ["--gcov-allowed-working-directory-root"],
+                config="gcov-allowed-working-directory-root",
+                group="gcov_options",
+                help=(
+                    "Do not run gcov in a working directory "
+                    "not in the list. The list contains by default the search paths."
+                ),
+                type=relative_path,
+                action="append",
+            ),
+            GcovrConfigOption(
                 "gcov_use_existing_files",
                 ["-g", "--gcov-use-existing-files", "--use-gcov-files"],
                 group="gcov_options",
