@@ -68,9 +68,6 @@ def read_report(options: Options) -> CoverageContainer:
     profraw_files = set()
 
     # Get data files
-    if not options.search_paths:
-        options.search_paths = [options.root]
-
     for search_path in options.search_paths:
         profraw_files.update(find_datafiles(search_path, options.exclude_directory))
 
