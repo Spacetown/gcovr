@@ -82,13 +82,11 @@ def get_exit_code(
         or threshold_condition_or_decision > 0.0
         or threshold_function > 0.0
     ):
-        stats = covdata.stats
-
         line_nok = False
         if threshold_line > 0.0:
             # If there are no lines, mark as uncovered
             # (indicates no data at all, likely an error).
-            percent_lines = stats.line.percent_or(0.0)
+            percent_lines = covdata.line_coverage().percent_or(0.0)
 
             if percent_lines < threshold_line:
                 line_nok = True
@@ -101,7 +99,7 @@ def get_exit_code(
         branch_nok = False
         if threshold_branch > 0.0:
             # Allow data with no branches.
-            percent_branches = stats.branch.percent_or(100.0)
+            percent_branches = covdata.branch_coverage().percent_or(100.0)
             if percent_branches < threshold_branch:
                 branch_nok = True
                 LOGGER.error(
@@ -113,7 +111,7 @@ def get_exit_code(
         condition_or_decision_nok = False
         if threshold_condition_or_decision > 0.0:
             # Allow data with no conditions.
-            percent_condition = stats.condition.percent_or(100.0)
+            percent_condition = covdata.condition_coverage().percent_or(100.0)
             if percent_condition < threshold_condition_or_decision:
                 condition_or_decision_nok = True
                 LOGGER.error(
@@ -123,7 +121,7 @@ def get_exit_code(
                 )
 
             # Allow data with no decisions.
-            percent_decision = stats.decision.percent_or(100.0)
+            percent_decision = covdata.decision_coverage().percent_or(100.0)
             if percent_decision < threshold_condition_or_decision:
                 condition_or_decision_nok = True
                 LOGGER.error(
@@ -135,7 +133,7 @@ def get_exit_code(
         function_nok = False
         if threshold_function > 0.0:
             # Allow data with no functions.
-            percent_function = stats.function.percent_or(100.0)
+            percent_function = covdata.function_coverage().percent_or(100.0)
             if percent_function < threshold_function:
                 function_nok = True
                 LOGGER.error(

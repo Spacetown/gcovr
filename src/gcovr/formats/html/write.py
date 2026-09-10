@@ -86,7 +86,7 @@ def get_theme_color(html_theme: str) -> str:
 
 
 @functools.lru_cache(maxsize=1)
-def templates(options: Options) -> Environment:
+def theme_environment(options: Options) -> Environment:
     """Get the Jinja2 environment for the templates."""
     # As default use the package loader
     loaders: list[BaseLoader] = []
@@ -115,10 +115,10 @@ def templates(options: Options) -> Environment:
 
 
 @functools.lru_cache(maxsize=1)
-def user_templates() -> Environment:
+def file_environment() -> Environment:
     """Get the Jinja2 environment for the user templates."""
 
-    def load_user_template(template: str) -> str | None:
+    def load_file(template: str) -> str | None:
         contents = None
         try:
             with open(template, "rb") as f:
@@ -130,7 +130,7 @@ def user_templates() -> Environment:
         return contents
 
     return Environment(
-        loader=FunctionLoader(load_user_template),
+        loader=FunctionLoader(load_file),
         autoescape=True,
         trim_blocks=True,
         lstrip_blocks=True,
@@ -146,9 +146,9 @@ class CssRenderer:
         """Load the CSS template."""
         if options.html_css is not None:
             template_path = os.path.relpath(options.html_css)
-            return user_templates().get_template(template_path)
+            return file_environment().get_template(template_path)
 
-        return templates(options).get_template("style.css")
+        return theme_environment(options).get_template("style.css")
 
     @staticmethod
     def render(options: Options, **data: dict[Any, Any]) -> str:
@@ -247,7 +247,7 @@ def get_formatter(options: Options) -> PygmentsHighlighting | NullHighlighting:
     """Get the formatter for the selected theme."""
     if options.html_syntax_highlighting:
         highlight_style = (
-            templates(options)
+            theme_environment(options)
             .get_template(f"pygments.{get_theme_color(options.html_theme)}")
             .render()
         )
@@ -327,13 +327,22 @@ class RootInfo:
 
     def set_coverage(self, covdata: CoverageContainer) -> None:
         """Update this RootInfo with a summary of the CoverageContainer."""
-        stats = covdata.stats
-        self.lines = dict_from_stat(stats.line, self.line_coverage_class, 0.0)
-        self.functions = dict_from_stat(stats.function, self.coverage_class)
-        self.branches = dict_from_stat(stats.branch, self.branch_coverage_class)
-        self.conditions = dict_from_stat(stats.condition, self.coverage_class)
-        self.decisions = dict_from_stat(stats.decision, self.coverage_class)
-        self.calls = dict_from_stat(stats.call, self.coverage_class)
+        self.lines = dict_from_stat(
+            covdata.line_coverage(), self.line_coverage_class, 0.0
+        )
+        self.functions = dict_from_stat(
+            covdata.function_coverage(), self.coverage_class
+        )
+        self.branches = dict_from_stat(
+            covdata.branch_coverage(), self.branch_coverage_class
+        )
+        self.conditions = dict_from_stat(
+            covdata.condition_coverage(), self.coverage_class
+        )
+        self.decisions = dict_from_stat(
+            covdata.decision_coverage(), self.coverage_class
+        )
+        self.calls = dict_from_stat(covdata.call_coverage(), self.coverage_class)
 
     def line_coverage_class(self, coverage: float | None) -> str:
         """Get the coverage class for the line."""
@@ -380,6 +389,7 @@ def write_report(
             covdata.filecov(recurse=True),
         )
     )
+
     data["USE_BLOCK_IDS"] = options.html_block_ids
     data["COVERAGE_MED"] = medium_threshold
     data["COVERAGE_HIGH"] = high_threshold
@@ -514,6 +524,7 @@ def write_report(
                 "isDirectory": isinstance(cdata, CoverageContainer),
                 "link": cdata_data["link"],
             }
+            cdata.properties["tree_data"]["diff"] = cdata.diff.name
 
             # Add the sorted children to the tree data for directories
             if isinstance(cdata, CoverageContainer):
@@ -552,7 +563,7 @@ def write_report(
     javascript_data = (
         None
         if options.html_static_report
-        else templates(options).get_template("gcovr.js").render(**data).strip()
+        else theme_environment(options).get_template("gcovr.js").render(**data).strip()
     )
 
     if self_contained:
@@ -620,7 +631,7 @@ def write_root_page(
 ) -> None:
     """Generate the root HTML file that contains the high level report."""
     html_string = (
-        templates(options)
+        theme_environment(options)
         .get_template("directory_page.html")
         .render(
             **data,
@@ -645,7 +656,7 @@ def write_directory_pages(
 
     for dircov in covdata.dircov(recurse=True) if options.html_nested else [covdata]:
         html_string = (
-            templates(options)
+            theme_environment(options)
             .get_template("directory_page.html")
             .render(
                 **data,
@@ -688,7 +699,7 @@ def write_source_pages(
             error_no_files_not_found += 1
 
         html_string = (
-            templates(options)
+            theme_environment(options)
             .get_template("source_page.html")
             .render(**data, **file_data)
         )
@@ -700,7 +711,7 @@ def write_source_pages(
             fh.write(html_string + "\n")
 
     html_string = (
-        templates(options)
+        theme_environment(options)
         .get_template("functions_page.html")
         .render(
             **data,
@@ -753,7 +764,7 @@ def write_single_page(
             directories.append(get_directory_data(options, root_info, dircov))
 
     html_string = (
-        templates(options)
+        theme_environment(options)
         .get_template("single_page.html")
         .render(
             **data,
@@ -809,7 +820,7 @@ def get_coverage_data(
 
     is_file_with_lines = isinstance(cdata, FileCoverage) and cdata.has_lines()
     lines = {
-        "total": stats.line.total_with_excluded,
+        "total": stats.line.total,
         "exec": stats.line.covered,
         "excluded": stats.line.excluded,
         "coverage": stats.line.percent_or(100.0 if is_file_with_lines else "-"),
@@ -820,7 +831,7 @@ def get_coverage_data(
     }
 
     branches = {
-        "total": stats.branch.total_with_excluded,
+        "total": stats.branch.total,
         "exec": stats.branch.covered,
         "excluded": stats.branch.excluded,
         "coverage": stats.branch.percent_or("-"),
@@ -829,7 +840,7 @@ def get_coverage_data(
     }
 
     conditions = {
-        "total": stats.condition.total_with_excluded,
+        "total": stats.condition.total,
         "exec": stats.condition.covered,
         "excluded": stats.condition.excluded,
         "coverage": stats.condition.percent_or("-"),
@@ -847,7 +858,7 @@ def get_coverage_data(
     }
 
     functions = {
-        "total": stats.function.total_with_excluded,
+        "total": stats.function.total,
         "exec": stats.function.covered,
         "excluded": stats.function.excluded,
         "coverage": stats.function.percent_or("-"),
@@ -856,7 +867,7 @@ def get_coverage_data(
     }
 
     calls = {
-        "total": stats.call.total_with_excluded,
+        "total": stats.call.total,
         "exec": stats.call.covered,
         "excluded": stats.call.excluded,
         "coverage": stats.call.percent_or("-"),
@@ -1083,9 +1094,7 @@ def dict_from_stat(
     """Get a dictionary from the stats."""
     coverage_default = "-" if default is None else default
     data = {
-        "total": stat.total_with_excluded
-        if isinstance(stat, CoverageStat)
-        else stat.total,
+        "total": stat.total if isinstance(stat, CoverageStat) else stat.total,
         "exec": stat.covered,
         "excluded": stat.excluded if isinstance(stat, CoverageStat) else "-",
         "coverage": stat.percent_or(coverage_default),
@@ -1197,7 +1206,7 @@ def source_row_branch(
     return {
         "function_name": linecov.report_function_name,
         "taken": stats.covered,
-        "total": stats.total_with_excluded,
+        "total": stats.total,
         "branches": items,
     }
 
@@ -1237,7 +1246,7 @@ def source_row_condition(
     stats = linecov.condition_coverage()
     return {
         "function_name": linecov.report_function_name,
-        "count": stats.total_with_excluded,
+        "count": stats.total,
         "covered": stats.covered,
         "condition": items,
     }
@@ -1315,7 +1324,7 @@ def source_row_call(linecov: LineCoverage) -> dict[str, Any]:
     return {
         "function_name": linecov.report_function_name,
         "invoked": stats.covered,
-        "total": stats.total_with_excluded,
+        "total": stats.total,
         "calls": items,
     }
 
