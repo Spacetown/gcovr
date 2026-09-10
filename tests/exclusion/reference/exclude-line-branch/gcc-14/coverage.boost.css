@@ -2297,7 +2297,7 @@ tr.source-line.nav-highlight > td {
 }
 
 .functions-header,
-.functions-row {
+.function-row {
   display: grid;
   grid-template-columns: 1fr 90px 70px 90px 90px;
   gap: 0;

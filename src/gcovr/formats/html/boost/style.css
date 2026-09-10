@@ -2297,7 +2297,7 @@ tr.source-line.nav-highlight > td {
 }
 
 .functions-header,
-.functions-row {
+.function-row {
   display: grid;
   grid-template-columns: 1fr 90px 70px{% if SHOW_CONDITION_COVERAGE %} 90px{% endif %}{% if SHOW_DECISION %} 90px{% endif %} 90px{% if SHOW_CALLS %} 90px{% endif %};
   gap: 0;
