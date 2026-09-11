@@ -20,15 +20,15 @@
 # cspell:ignore getpreferredencoding getfixture caplog
 
 from __future__ import annotations
-from argparse import _ArgumentGroup, ArgumentParser, ArgumentTypeError, SUPPRESS
-from inspect import isclass
-from locale import getpreferredencoding
-from typing import Iterable, Any, Callable, TextIO
-from dataclasses import dataclass
+
 import datetime
 import os
 import re
-
+from argparse import SUPPRESS, ArgumentParser, ArgumentTypeError, _ArgumentGroup
+from dataclasses import dataclass
+from inspect import isclass
+from locale import getpreferredencoding
+from typing import Any, Callable, Iterable, TextIO
 
 from . import formats
 from .exceptions import SanityCheckError

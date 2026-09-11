@@ -24,7 +24,6 @@ import pytest
 
 from tests.conftest import CONDITION_COVERAGE_POSSIBLE
 
-
 if typing.TYPE_CHECKING:
     from tests.conftest import GcovrTestExec
 

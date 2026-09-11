@@ -18,6 +18,7 @@
 # ****************************************************************************
 
 import re
+
 import pytest
 
 from tests.conftest import IS_DARWIN, IS_GCC, IS_LINUX, GcovrTestExec

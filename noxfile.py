@@ -17,21 +17,21 @@
 #
 # ****************************************************************************
 
-from contextlib import ExitStack
 import functools
 import io
 import os
-from pathlib import Path
 import platform
 import re
-from runpy import run_path
+import shutil
 import socket
+import subprocess  # nosec # Commands are trusted.
 import sys
 import textwrap
 import time
-import shutil
-import subprocess  # nosec # Commands are trusted.
 import zipfile
+from contextlib import ExitStack
+from pathlib import Path
+from runpy import run_path
 
 import nox
 

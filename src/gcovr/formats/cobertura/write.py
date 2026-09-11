@@ -17,16 +17,16 @@
 #
 # ****************************************************************************
 
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
+
 from lxml import etree  # nosec # We only write XML files
 
-from ...options import Options
-
-from ...utils import force_unix_separator, get_version_for_report, write_xml_output
 from ...data_model.container import CoverageContainer
 from ...data_model.coverage import LineCoverage
 from ...data_model.stats import CoverageStat, SummarizedStats
+from ...options import Options
+from ...utils import force_unix_separator, get_version_for_report, write_xml_output
 
 
 def write_report(

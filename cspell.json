@@ -95,6 +95,7 @@
         "Hashbang",
         "htmlcov",
         "iostream",
+        "isort",
         "jacoco",
         "jobname",
         "kcov",

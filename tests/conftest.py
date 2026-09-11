@@ -18,21 +18,21 @@
 # ****************************************************************************
 
 # cspell:ignore addoption
-from contextlib import contextmanager
 import difflib
 import fnmatch
 import logging
 import os
-from pathlib import Path
 import platform
 import re
 import shlex
 import shutil
 import subprocess  # nosec: B404
+import zipfile
+from contextlib import contextmanager
+from pathlib import Path
 from sys import stderr, stdout
 from typing import Callable, Generator, List, NoReturn
 from unittest import mock
-import zipfile
 
 import pytest
 from lxml import etree  # nosec # Data is trusted.

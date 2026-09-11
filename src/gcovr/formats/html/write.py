@@ -24,10 +24,11 @@ import os
 import re
 from typing import Any, Callable, Iterable, Iterator
 
+import pygments
 from jinja2 import (
     BaseLoader,
-    Environment,
     ChoiceLoader,
+    Environment,
     FileSystemLoader,
     FunctionLoader,
     PackageLoader,
@@ -35,25 +36,24 @@ from jinja2 import (
     Template,
 )
 from markupsafe import Markup
-import pygments
 from pygments.filter import Filter
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexer import Lexer
 from pygments.lexers import get_lexer_for_filename
-from pygments.token import _TokenType, Token
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
+from pygments.token import Token, _TokenType
 
 from ...data_model.container import CoverageContainer
 from ...data_model.coverage import (
     CoverageDiff,
+    CoverageStat,
     DecisionCoverageConditional,
+    DecisionCoverageStat,
     DecisionCoverageSwitch,
     DecisionCoverageUncheckable,
     FileCoverage,
     LineCoverage,
-    CoverageStat,
-    DecisionCoverageStat,
 )
 from ...data_model.coverage_dict import FunctioncovKeyType
 from ...exclusions.markers import _EXCLUDE_FLAG, get_markers_regex
@@ -68,7 +68,6 @@ from ...utils import (
     get_version_for_report,
     open_text_for_writing,
 )
-
 
 PYGMENTS_CSS_MARKER = "/* Comment.Preproc */"
 

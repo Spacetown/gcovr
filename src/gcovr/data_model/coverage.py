@@ -65,10 +65,11 @@ which may not be the same as the input value.
 """
 
 from __future__ import annotations
-from abc import abstractmethod
-from enum import Enum
+
 import os
 import re
+from abc import abstractmethod
+from enum import Enum
 from typing import Any, Callable, Iterable, NoReturn, TypeVar, cast
 
 from ..exceptions import (
@@ -78,13 +79,12 @@ from ..exceptions import (
 )
 from ..filter import is_file_excluded
 from ..logging import LOGGER
-from ..utils import force_unix_separator
 from ..options import Options
-
+from ..utils import force_unix_separator
 from .coverage_dict import (
     BranchcovKeyType,
-    ConditioncovKeyType,
     CallcovKeyType,
+    ConditioncovKeyType,
     CoverageDict,
     FunctioncovKeyType,
     LinecovCollectionKeyType,
@@ -92,7 +92,6 @@ from .coverage_dict import (
 )
 from .merging import DEFAULT_MERGE_OPTIONS, MergeOptions
 from .stats import CoverageStat, DecisionCoverageStat, SummarizedStats
-
 
 GCOVR_DATA_SOURCES = "gcovr/data_sources"
 GCOVR_EXCLUDED = "gcovr/excluded"

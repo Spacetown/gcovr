@@ -18,6 +18,7 @@
 # ****************************************************************************
 
 from __future__ import annotations
+
 import os
 import re
 from typing import Any, Iterator, Literal, ValuesView, overload
@@ -26,7 +27,6 @@ from ..filter import is_file_excluded
 from ..logging import LOGGER
 from ..options import Options
 from ..utils import commonpath, force_unix_separator
-
 from .coverage import CoverageDiff, FileCoverage, summarize_coverage_diff
 from .coverage_dict import CoverageDict
 from .merging import MergeOptions

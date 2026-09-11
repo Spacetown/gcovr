@@ -20,11 +20,12 @@
 import os
 import re
 import sys
-
+import traceback
 from argparse import ArgumentError, ArgumentParser, Namespace
 from typing import Any
-import traceback
 
+# formats
+from . import formats as gcovr_formats
 from .configuration import (
     argument_parser_setup,
     config_entries_from_dict,
@@ -41,12 +42,9 @@ from .filter import (
 )
 from .formats.gcov.read import GcovProgram
 from .formats.gcov.workers import Workers
-from .logging import configure_logging, update_logging, LOGGER
+from .logging import LOGGER, configure_logging, update_logging
 from .options import FilterOption
 from .version import __version__
-
-# formats
-from . import formats as gcovr_formats
 
 if sys.version_info >= (3, 11):
     import tomllib
